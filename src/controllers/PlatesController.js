@@ -62,13 +62,44 @@ class PlatesController {
         const checkIfNewIngredients = await knex("ingredients").where({ plate_id });
 
         const existingIngredientNames = checkIfNewIngredients.map(ingredient => ingredient.name);
-        
-        // Comparar o existingIngredientNames com o ingredients 
-        // Remover os ingredients que não constem no array de ingredients vindo do update
-        // Adicionar os novos ingredientes que constem no array de ingredients vindo do update
 
+        // Remover os ingredients que não constem no array de ingredients vindo do update
+        const ingredientsToDelete = existingIngredientNames.filter(name => !ingredients.includes(name));
+
+        // Adicionar os novos ingredientes que constem no array de ingredients vindo do update
+        const ingredientsToAdd = ingredients.filter(name => !existingIngredientNames.includes(name));
+
+        await knex("ingredients").where({ plate_id }).whereIn("name", ingredientsToDelete).del();
+
+        const ingredientsInsert = ingredientsToAdd.map(name => {
+            return {
+                plate_id,
+                name
+            };
+        });
+
+        if (ingredientsInsert.length > 0) {
+            await knex("ingredients").insert(ingredientsInsert);
+        }
 
         response.json({ name, category, price, description });
+    }
+
+    async show(request, response){
+        const plate_id = request.params.id;
+
+        const plates = await knex("plates").where({ "id": plate_id }).first();
+        const ingredients = await knex("ingredients").where({ plate_id});
+        
+        response.json({ plates, ingredients });
+    }
+
+    async delete(request, response){
+        const plate_id = request.params.id;
+
+        await knex("plates").where({ "id": plate_id }).delete();
+
+        response.json();
     }
 }
 
