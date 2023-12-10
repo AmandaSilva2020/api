@@ -1,10 +1,10 @@
 const knex = require("../database/knex");
 const AppError = require("../utils/AppError");
 
-class PlatesController {
+class OrdersController {
     async create(request, response){
         const { name, category, price, description, ingredients } = request.body;
-        const user_id = request.user.id;
+        const user_id = request.params.user_id;
         
         const user = await knex("users").where({ "id": user_id }).first();
         
@@ -44,11 +44,6 @@ class PlatesController {
     async update(request, response){
         const { name, category, price, description, ingredients } = request.body;
         const plate_id = request.params.id;
-        const user_id = request.user.id;
-
-        if(!user_id){
-            throw new AppError("Utilizador não autorizado", 401);
-        }
 
         const plate = await knex("plates").where({ "id": plate_id }).first();
 
@@ -101,11 +96,6 @@ class PlatesController {
 
     async delete(request, response){
         const plate_id = request.params.id;
-        const user_id = request.user.id;
-
-        if(!user_id){
-            throw new AppError("Utilizador não autorizado", 401);
-        }
 
         await knex("plates").where({ "id": plate_id }).delete();
 
@@ -156,4 +146,4 @@ class PlatesController {
     }
 }
 
-module.exports = PlatesController;
+module.exports = OrdersController;
