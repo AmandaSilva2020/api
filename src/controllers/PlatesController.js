@@ -50,6 +50,12 @@ class PlatesController {
             throw new AppError("Utilizador não autorizado", 401);
         }
 
+        const user = await knex("users").where({ "id": user_id }).first();
+
+        if(user.role != "admin"){
+            throw new AppError("Apenas administradores podem alter pratos");
+        }
+
         const plate = await knex("plates").where({ "id": plate_id }).first();
 
         if(!plate){
@@ -105,6 +111,12 @@ class PlatesController {
 
         if(!user_id){
             throw new AppError("Utilizador não autorizado", 401);
+        }
+
+        const user = await knex("users").where({ "id": user_id }).first();
+        
+        if(user.role != "admin"){
+            throw new AppError("Apenas administradores podem apagar pratos");
         }
 
         await knex("plates").where({ "id": plate_id }).delete();
