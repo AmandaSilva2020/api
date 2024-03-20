@@ -16,7 +16,7 @@ const plateImageController = new PlateImageController();
 
 platesRoutes.use(ensureAuthenticated);
 
-platesRoutes.post("/", verifyUserAuthorization("admin"), platesController.create);
+platesRoutes.post("/", verifyUserAuthorization("admin"), upload.single("plateimage"), platesController.create);
 platesRoutes.put("/:id", verifyUserAuthorization("admin"), platesController.update);
 platesRoutes.get("/:id", platesController.show);
 platesRoutes.delete("/:id", verifyUserAuthorization("admin"), platesController.delete);

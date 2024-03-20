@@ -1,10 +1,16 @@
 const knex = require("../database/knex");
 const AppError = require("../utils/AppError");
+const DiskStorage = require("../providers/DiskStorage");
 
 class PlatesController {
     async create(request, response){
         const { name, category, price, description, ingredients } = request.body;
         const user_id = request.user.id;
+        const plateFile = request.file;
+
+        if (!plateFile) {
+            throw new AppError("Nenhum arquivo de imagem fornecido.");
+        }
         
         const user = await knex("users").where({ "id": user_id }).first();
         
@@ -26,7 +32,16 @@ class PlatesController {
             throw new AppError("Verifique se preencheu todas as informações obrigatórias sobre o prato.");
         }
 
-        const [ plate_id ] = await knex("plates").insert({ name, category, price, description });
+        const diskStorage = new DiskStorage();
+        const filename = await diskStorage.saveFile(plateFile.filename);
+
+        const [ plate_id ] = await knex("plates").insert({ 
+            name, 
+            category, 
+            price, 
+            description,
+            image: filename,
+        });
 
         const ingredientsInsert = ingredients.map(name => {
             return {
@@ -38,7 +53,7 @@ class PlatesController {
         await knex("ingredients").insert(ingredientsInsert);
         
 
-        response.json({ name, category, price, description, ingredients });
+        response.json({ name, category, price, description, ingredients, filename });
     }
 
     async update(request, response){
@@ -108,6 +123,7 @@ class PlatesController {
     async delete(request, response){
         const plate_id = request.params.id;
         const user_id = request.user.id;
+        const diskStorage = new DiskStorage();
 
         if(!user_id){
             throw new AppError("Utilizador não autorizado", 401);
@@ -119,7 +135,9 @@ class PlatesController {
             throw new AppError("Apenas administradores podem apagar pratos");
         }
 
+        const plate = await knex("plates").where({ "id": plate_id }).first();
         await knex("plates").where({ "id": plate_id }).delete();
+        await diskStorage.deleteFile(plate.image);
 
         response.json();
     }
