@@ -148,8 +148,11 @@ class PlatesController {
         let plates;
 
         plates = await knex("plates")
-        .whereLike("name", `%${name}%`)
-        .orderBy("name");
+        .distinct("plates.id", "plates.name", "plates.category", "plates.price", "plates.description", "plates.image")
+        .leftJoin("ingredients", "plates.id", "ingredients.plate_id")
+        .where("plates.name", "like", `%${name}%`)
+        .orWhere("ingredients.name", "like", `%${name}%`)
+        .orderBy("plates.name");
 
         
 
